@@ -1,0 +1,17 @@
+R_DEF: Internal format may change without notice
+local
+id buttonStartPayment
+id editAmount
+id editBank
+id editLs
+id iconPayment
+id lastResultTitle
+id statusCard
+id statusTitle
+id subtitleText
+id textLastStatus
+id textLastTransactionId
+id textStatus
+id titleText
+layout activity_main
+mipmap ic_launcher

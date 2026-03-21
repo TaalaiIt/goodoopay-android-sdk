@@ -1,0 +1,20 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.example.goodoo_pay_native.app-mergeReleaseResources-36:/values-watch-v20/values-watch-v20.xml",
+            "map": [
+                {
+                    "source": "/Users/alex/.gradle/caches/8.10/transforms/41e24ed8b297162c69cd2257e4e851f8/transformed/appcompat-1.6.1/res/values-watch-v20/values-watch-v20.xml",
+                    "from": {
+                        "startLines": "2,5,8",
+                        "startColumns": "4,4,4",
+                        "startOffsets": "55,214,385",
+                        "endLines": "4,7,10",
+                        "endColumns": "12,12,12",
+                        "endOffsets": "209,380,553"
+                    }
+                }
+            ]
+        }
+    ]
+}

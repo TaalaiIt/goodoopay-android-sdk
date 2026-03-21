@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.goodoo.pay.sdk">
+    <application>
+        <activity
+            android:name=".GoodooPayActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Material.Light.NoActionBar" />
+    </application>
+</manifest>

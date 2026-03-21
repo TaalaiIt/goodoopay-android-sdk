@@ -1,0 +1,194 @@
+group 'io.github.goodoollc'
+version (project.findProperty('releaseVersion') ?: '1.0.0')
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.0'
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0'
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+android {
+    namespace 'com.goodoo.pay.sdk'
+    compileSdkVersion 34
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    defaultConfig {
+        minSdkVersion 21
+    }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+}
+
+repositories {
+    google()
+    mavenCentral()
+    if (findProject(':flutter') == null) {
+// Standalone build: get Flutter embedding from Maven
+        maven { url 'https://storage.googleapis.com/download.flutter.io' }
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    if (findProject(':flutter') != null) {
+        compileOnly project(':flutter')
+    } else {
+        def engineVersion = project.findProperty('flutter-engine-version') ?: '1.0.0-cf56914b326edb0ccb123ffdc60f00060bd513fa'
+        compileOnly("io.flutter:flutter_embedding_release:${engineVersion}") { transitive = false }
+    }
+}
+
+// Publishing (used when running standalone from build_aar.sh)
+afterEvaluate {
+    if (project.findProperty('publish-to') != null) {
+        def outputDir = project.property('publish-to')
+        publishing {
+            publications {
+                release(MavenPublication) {
+                    groupId = 'io.github.goodoollc'
+                    artifactId = 'goodoo_pay_sdk'
+                    version = project.version
+                    from components.release
+
+                    pom {
+                        name = 'GoodooPay Android SDK'
+                        description = 'GoodooPay Android SDK (Kotlin bridge + Activity) for embedding GoodooPay Flutter payment UI.'
+                        url = 'https://github.com/goodoo-pay/goodoo_pay_flutter'
+                        licenses {
+                            license {
+                                name = 'The Apache License, Version 2.0'
+                                url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                            }
+                        }
+                        developers {
+                            developer {
+                                id = 'goodoo'
+                                name = 'GoodooPay'
+                            }
+                        }
+                        scm {
+                            url = 'https://github.com/goodoo-pay/goodoo_pay_flutter'
+                            connection = 'scm:git:https://github.com/goodoo-pay/goodoo_pay_flutter.git'
+                            developerConnection = 'scm:git:ssh://git@github.com/goodoo-pay/goodoo_pay_flutter.git'
+                        }
+                        withXml {
+                            // Add transitive dependency in published POM (without resolving it at build time).
+                            def root = asNode()
+                            def deps = root.dependencies ? root.dependencies[0] : root.appendNode('dependencies')
+                            def dep = deps.appendNode('dependency')
+                            dep.appendNode('groupId', 'io.github.goodoollc')
+                            dep.appendNode('artifactId', 'goodoo_pay_flutter')
+                            dep.appendNode('version', project.version.toString())
+                            dep.appendNode('scope', 'runtime')
+                        }
+                    }
+                }
+            }
+            repositories {
+                maven {
+                    url = uri("file://${outputDir}/outputs/repo")
+                }
+            }
+        }
+    }
+}
+
+// Maven Central publishing (tokens via Gradle properties / env).
+afterEvaluate {
+    if (project.hasProperty('publishCentral')) {
+        def sonatypeHost = project.findProperty('sonatypeHost') ?: 'https://s01.oss.sonatype.org'
+        def releasesRepoUrl = project.findProperty('sonatypeReleasesUrl') ?: "${sonatypeHost}/service/local/staging/deploy/maven2/"
+        def snapshotsRepoUrl = project.findProperty('sonatypeSnapshotsUrl') ?: "${sonatypeHost}/content/repositories/snapshots/"
+
+        def mavenUser =  System.getenv('SONATYPE_USERNAME')
+        def mavenPass = System.getenv('SONATYPE_PASSWORD')
+
+        publishing {
+            publications {
+                release(MavenPublication) {
+                    groupId = 'io.github.goodoollc'
+                    artifactId = 'goodoo_pay_sdk'
+                    version = project.version
+                    from components.release
+
+                    pom {
+                        name = 'GoodooPay Android SDK'
+                        description = 'GoodooPay Android SDK (Kotlin bridge + Activity) for embedding GoodooPay Flutter payment UI.'
+                        url = 'https://github.com/goodoo-pay/goodoo_pay_flutter'
+                        licenses {
+                            license {
+                                name = 'The Apache License, Version 2.0'
+                                url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                            }
+                        }
+                        developers {
+                            developer {
+                                id = 'goodoo'
+                                name = 'GoodooPay'
+                            }
+                        }
+                        scm {
+                            url = 'https://github.com/goodoo-pay/goodoo_pay_flutter'
+                            connection = 'scm:git:https://github.com/goodoo-pay/goodoo_pay_flutter.git'
+                            developerConnection = 'scm:git:ssh://git@github.com/goodoo-pay/goodoo_pay_flutter.git'
+                        }
+                        withXml {
+                            // Add transitive dependency in published POM (without resolving it at build time).
+                            def root = asNode()
+                            def deps = root.dependencies ? root.dependencies[0] : root.appendNode('dependencies')
+                            def dep = deps.appendNode('dependency')
+                            dep.appendNode('groupId', 'io.github.goodoollc')
+                            dep.appendNode('artifactId', 'goodoo_pay_flutter')
+                            dep.appendNode('version', project.version.toString())
+                            dep.appendNode('scope', 'runtime')
+                        }
+                    }
+                }
+            }
+            repositories {
+                maven {
+                    name = 'sonatype'
+                    url = uri(project.version.toString().endsWith('-SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl)
+                    credentials {
+                        username = mavenUser
+                        password = mavenPass
+                    }
+                }
+            }
+        }
+
+        signing {
+            def signingKey = project.findProperty('signingKey') ?: System.getenv('SIGNING_KEY')
+            def signingPassword = project.findProperty('signingPassword') ?: System.getenv('SIGNING_PASSWORD')
+            if (signingKey != null && signingPassword != null) {
+                useInMemoryPgpKeys(signingKey, signingPassword)
+            } else {
+                useGpgCmd()
+            }
+            sign publishing.publications
+        }
+    }
+}
