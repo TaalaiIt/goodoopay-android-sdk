@@ -90,8 +90,3 @@ GoodooPay.startPayment(this, params) { result ->
 
 3. Запустите приложение `GoodooPayNativeExample`.
 
-## Проверка сборки SDK
-
-```bash
-./gradlew :sdk:assembleRelease
-```
